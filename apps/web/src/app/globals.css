@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --bg: 0 0% 100%;
+  --fg: 240 10% 4%;
+  --card: 0 0% 100%;
+  --border: 240 6% 90%;
+  --muted: 240 5% 96%;
+  --muted-fg: 240 4% 46%;
+  --accent: 243 75% 59%; /* Default blue accent */
+}
+
+.dark {
+  --bg: 240 10% 4%;
+  --fg: 0 0% 98%;
+  --card: 240 8% 8%;
+  --border: 240 6% 16%;
+  --muted: 240 6% 12%;
+  --muted-fg: 240 5% 65%;
+}
+
+/* Accent color modes — swap the --accent triplet only */
+[data-color="amber"]   { --accent: 38 92% 50%; }
+[data-color="blue"]    { --accent: 243 75% 59%; }
+[data-color="pink"]    { --accent: 330 81% 60%; }
+[data-color="rose"]    { --accent: 350 89% 60%; }
+[data-color="emerald"] { --accent: 152 69% 40%; }
+[data-color="black"]   { --accent: 0 0% 9%; }
+
+@theme {
+  --color-bg: hsl(var(--bg));
+  --color-fg: hsl(var(--fg));
+  --color-card: hsl(var(--card));
+  --color-border: hsl(var(--border));
+  --color-muted: hsl(var(--muted));
+  --color-muted-fg: hsl(var(--muted-fg));
+  --color-accent: hsl(var(--accent));
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+body {
+  background-color: hsl(var(--bg));
+  color: hsl(var(--fg));
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}

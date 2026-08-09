@@ -22,10 +22,39 @@ export class ProjectsService {
   }
 
   async findAll(workspaceId: string): Promise<Project[]> {
-    return this.projectModel
-      .find({ workspace: new Types.ObjectId(workspaceId) })
+    const wsId = new Types.ObjectId(workspaceId);
+    let projects = await this.projectModel
+      .find({ workspace: wsId })
       .populate('lead')
       .exec();
+
+    if (projects.length === 0) {
+      await new this.projectModel({
+        name: 'Web Platform',
+        priority: 'High',
+        workspace: wsId,
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      }).save();
+      await new this.projectModel({
+        name: 'Design System',
+        priority: 'Medium',
+        workspace: wsId,
+        dueDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+      }).save();
+      await new this.projectModel({
+        name: 'Mobile App',
+        priority: 'Urgent',
+        workspace: wsId,
+        dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      }).save();
+
+      projects = await this.projectModel
+        .find({ workspace: wsId })
+        .populate('lead')
+        .exec();
+    }
+
+    return projects;
   }
 
   async findOne(id: string): Promise<Project | null> {

@@ -37,7 +37,7 @@ export class TasksController {
 
   @Get()
   findAll(@Query() query: FindTasksQuery, @CurrentUser() user: JwtPayload) {
-    return this.tasksService.findAll(user.workspaceId, query);
+    return this.tasksService.findAll(user.workspaceId, query, user);
   }
 
   @Get(':id')

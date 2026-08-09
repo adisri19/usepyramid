@@ -257,11 +257,12 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
             </span>
             
             <div className="flex flex-col gap-2 mb-3">
-              {subtasks.map((sub) => {
+              {subtasks.map((sub, i) => {
+                const subId = sub.id || (sub as any)._id || `sub-${i}`;
                 const isCompleted = sub.status === "Completed";
                 return (
                   <div 
-                    key={sub.id} 
+                    key={subId} 
                     className="flex items-center justify-between group rounded-lg px-2.5 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
                   >
                     <div 
@@ -278,7 +279,7 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
                       </span>
                     </div>
                     <button 
-                      onClick={() => handleDeleteSubtask(sub.id)}
+                      onClick={() => handleDeleteSubtask(subId)}
                       className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-500 transition-opacity p-0.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     >
                       <Trash className="h-3.5 w-3.5" />
@@ -407,14 +408,17 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
             </span>
             <div className="relative">
               <select
-                value={assignee?.id || ""}
+                value={assignee?.id || (assignee as any)?._id || ""}
                 onChange={(e) => updateField({ assignee: e.target.value || null as any })}
                 className="w-full appearance-none rounded-lg border border-zinc-250 bg-white px-3 py-1.5 pr-8 text-xs font-semibold focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200"
               >
                 <option value="">Unassigned</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.fullName}</option>
-                ))}
+                {users.map((u, i) => {
+                  const uid = u.id || (u as any)._id || `user-${i}`;
+                  return (
+                    <option key={uid} value={uid}>{u.fullName || u.username}</option>
+                  );
+                })}
               </select>
               <ChevronDown className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400 pointer-events-none" />
             </div>
@@ -427,14 +431,17 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
             </span>
             <div className="relative">
               <select
-                value={project?.id || ""}
+                value={project?.id || (project as any)?._id || ""}
                 onChange={(e) => updateField({ project: e.target.value || null as any })}
                 className="w-full appearance-none rounded-lg border border-zinc-250 bg-white px-3 py-1.5 pr-8 text-xs font-semibold focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200"
               >
                 <option value="">No Project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
+                {projects.map((p, i) => {
+                  const pid = p.id || (p as any)._id || `proj-${i}`;
+                  return (
+                    <option key={pid} value={pid}>{p.name}</option>
+                  );
+                })}
               </select>
               <ChevronDown className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400 pointer-events-none" />
             </div>

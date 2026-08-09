@@ -9,6 +9,8 @@ import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 
+import { FirebaseAdminService } from './firebase-admin.service';
+
 @Module({
   imports: [
     UsersModule,
@@ -23,8 +25,8 @@ import { GoogleStrategy } from './strategies/google.strategy';
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, FirebaseAdminService],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, FirebaseAdminService],
 })
 export class AuthModule {}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,9 +41,39 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-    window.location.href = `${apiUrl}/auth/google`;
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. Popup Google Firebase SSO
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      // 2. Exchange token with NestJS backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const response = await fetch(`${apiUrl}/auth/firebase`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to authenticate with Firebase backend");
+      }
+
+      const data = await response.json();
+      if (data.user) {
+        router.push("/tasks");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to sign in with Google Firebase.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

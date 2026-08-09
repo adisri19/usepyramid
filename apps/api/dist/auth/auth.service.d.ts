@@ -14,4 +14,13 @@ export declare class AuthService {
         user: import("../users/schemas/user.schema").User;
         token: string;
     }>;
+    validateFirebaseUser(decoded: {
+        email?: string;
+        name?: string;
+        picture?: string;
+        uid: string;
+    }): Promise<{
+        user: import("../users/schemas/user.schema").User;
+        token: string;
+    }>;
 }

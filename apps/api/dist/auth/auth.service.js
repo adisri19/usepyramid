@@ -72,6 +72,38 @@ let AuthService = class AuthService {
         const token = this.jwtService.sign(payload);
         return { user, token };
     }
+    async validateFirebaseUser(decoded) {
+        const email = decoded.email;
+        if (!email) {
+            throw new Error('Firebase account must have an email address');
+        }
+        let user = await this.usersService.findByEmail(email);
+        if (!user) {
+            const username = email.split('@')[0] + '_' + Math.floor(100 + Math.random() * 900);
+            user = await this.usersService.create({
+                email,
+                fullName: decoded.name || email.split('@')[0],
+                username,
+                avatarUrl: decoded.picture ||
+                    `https://api.dicebear.com/7.x/initials/svg?seed=${decoded.name || email}`,
+                isGuest: false,
+                provider: 'google',
+            });
+        }
+        const workspaces = await this.workspacesService.findByOwner(user.id);
+        let workspace = workspaces[0];
+        if (!workspace) {
+            workspace = await this.workspacesService.create(`${user.fullName || 'My'}'s Workspace`, user.id);
+        }
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            workspaceId: workspace.id,
+            isGuest: false,
+        };
+        const token = this.jwtService.sign(payload);
+        return { user, token };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

@@ -17,15 +17,27 @@ const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
 const config_1 = require("@nestjs/config");
+const firebase_admin_service_1 = require("./firebase-admin.service");
 let AuthController = class AuthController {
     authService;
     configService;
-    constructor(authService, configService) {
+    firebaseAdminService;
+    constructor(authService, configService, firebaseAdminService) {
         this.authService = authService;
         this.configService = configService;
+        this.firebaseAdminService = firebaseAdminService;
     }
     async guestLogin(res) {
         const { user, token } = await this.authService.createGuestSession();
+        this.setCookie(res, token);
+        return { user };
+    }
+    async firebaseLogin(idToken, res) {
+        if (!idToken) {
+            throw new common_1.BadRequestException('Firebase ID token is required');
+        }
+        const decoded = await this.firebaseAdminService.verifyToken(idToken);
+        const { user, token } = await this.authService.validateFirebaseUser(decoded);
         this.setCookie(res, token);
         return { user };
     }
@@ -65,6 +77,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "guestLogin", null);
 __decorate([
+    (0, common_1.Post)('firebase'),
+    __param(0, (0, common_1.Body)('idToken')),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "firebaseLogin", null);
+__decorate([
     (0, common_1.Get)('google'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
     __metadata("design:type", Function),
@@ -90,6 +110,7 @@ __decorate([
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        firebase_admin_service_1.FirebaseAdminService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

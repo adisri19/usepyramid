@@ -56,6 +56,14 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   });
   const [filters, setFilters] = useState<any>({});
 
+  const normalize = (item: any) => {
+    if (!item) return item;
+    return {
+      ...item,
+      id: item.id || item._id?.toString() || String(item._id),
+    };
+  };
+
   const refreshData = useCallback(async () => {
     setLoading(true);
     try {
@@ -69,15 +77,15 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       const qs = params.toString();
       const taskList = await apiFetch(`/tasks${qs ? `?${qs}` : ""}`);
-      setTasks(taskList);
+      setTasks((taskList || []).map(normalize));
 
       const projectList = await apiFetch("/projects");
-      setProjects(projectList);
+      setProjects((projectList || []).map(normalize));
 
       // Load mock workspace members or workspace owner since workspace endpoint just gives metadata
       const u = await apiFetch("/users/me");
       if (u) {
-        setUsers([u]);
+        setUsers([normalize(u)]);
       }
     } catch (err) {
       console.error("Failed to load workspace tasks details", err);
@@ -115,7 +123,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     // Optimistic Update
     const prevTasks = [...tasks];
     setTasks(prev => 
-      prev.map(t => t.id === taskId ? { ...t, status: newStatus as any } : t)
+      prev.map(t => (t.id === taskId || (t as any)._id === taskId) ? { ...t, status: newStatus as any } : t)
     );
 
     try {
@@ -139,8 +147,9 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           project: projectId || undefined,
         }),
       });
-      setTasks(prev => [...prev, created]);
-      return created;
+      const normalized = normalize(created);
+      setTasks(prev => [...prev, normalized]);
+      return normalized;
     } catch (err) {
       console.error("Failed to create task", err);
       throw err;
@@ -150,7 +159,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const deleteTask = async (taskId: string) => {
     try {
       await apiFetch(`/tasks/${taskId}`, { method: "DELETE" });
-      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setTasks(prev => prev.filter(t => t.id !== taskId && (t as any)._id !== taskId));
     } catch (err) {
       console.error("Failed to delete task", err);
     }

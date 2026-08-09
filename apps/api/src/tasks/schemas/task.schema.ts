@@ -1,7 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_, ret: any) => {
+      ret.id = ret._id.toString();
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_, ret: any) => {
+      ret.id = ret._id.toString();
+      return ret;
+    },
+  },
+})
 export class Task extends Document {
   @Prop({ required: true })
   title: string;
@@ -28,7 +45,7 @@ export class Task extends Document {
   workspace: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Task' })
-  parentTask?: Types.ObjectId; // for subtasks
+  parentTask?: Types.ObjectId;
 
   @Prop([String])
   labels: string[];

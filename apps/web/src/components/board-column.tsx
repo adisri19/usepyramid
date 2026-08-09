@@ -69,9 +69,12 @@ export function BoardColumn({ status, tasks }: BoardColumnProps) {
 
       {/* Cards List container */}
       <div className="flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-230px)] pr-0.5">
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} visibleFields={visibleFields} />
-        ))}
+        {tasks.map((task) => {
+          const taskId = task.id || (task as any)._id || task.title;
+          return (
+            <TaskCard key={taskId} task={{ ...task, id: taskId }} visibleFields={visibleFields} />
+          );
+        })}
 
         {/* Inline Task Creation Form */}
         {isAdding && (

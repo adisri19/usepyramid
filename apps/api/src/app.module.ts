@@ -12,7 +12,10 @@ import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', 'apps/api/.env', '../apps/api/.env'],
+    }),
     DatabaseModule,
     AuthModule,
     UsersModule,

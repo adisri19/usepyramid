@@ -6,11 +6,27 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
+import { IsOptional, IsString } from 'class-validator';
+
 class FindTasksQuery {
+  @IsOptional()
+  @IsString()
   status?: string;
+
+  @IsOptional()
+  @IsString()
   project?: string;
+
+  @IsOptional()
+  @IsString()
   assignee?: string;
+
+  @IsOptional()
+  @IsString()
   priority?: string;
+
+  @IsOptional()
+  @IsString()
   search?: string;
 }
 

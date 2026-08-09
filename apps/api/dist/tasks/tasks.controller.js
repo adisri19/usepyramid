@@ -20,6 +20,7 @@ const jwt_payload_interface_1 = require("../auth/jwt-payload.interface");
 const tasks_service_1 = require("./tasks.service");
 const create_task_dto_1 = require("./dto/create-task.dto");
 const update_task_dto_1 = require("./dto/update-task.dto");
+const class_validator_1 = require("class-validator");
 class FindTasksQuery {
     status;
     project;
@@ -27,6 +28,31 @@ class FindTasksQuery {
     priority;
     search;
 }
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FindTasksQuery.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FindTasksQuery.prototype, "project", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FindTasksQuery.prototype, "assignee", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FindTasksQuery.prototype, "priority", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FindTasksQuery.prototype, "search", void 0);
 let TasksController = class TasksController {
     tasksService;
     constructor(tasksService) {

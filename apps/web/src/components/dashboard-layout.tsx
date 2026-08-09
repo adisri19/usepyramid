@@ -1,31 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TasksProvider, useTasks } from "@/context/tasks-context";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { VelocityBar } from "./velocity-bar";
+import { CommandPalette } from "./command-palette";
+import { ShortcutsModal } from "./shortcuts-modal";
 import { X, Check } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
+  showVelocity?: boolean;
 }
 
-export function DashboardLayout({ children, title }: DashboardLayoutProps) {
+export function DashboardLayout({ children, title, showVelocity = true }: DashboardLayoutProps) {
   return (
     <TasksProvider>
-      <DashboardLayoutContent title={title}>{children}</DashboardLayoutContent>
+      <DashboardLayoutContent title={title} showVelocity={showVelocity}>
+        {children}
+      </DashboardLayoutContent>
     </TasksProvider>
   );
 }
 
-function DashboardLayoutContent({ children, title }: DashboardLayoutProps) {
-  const { createTask, projects } = useTasks();
+function DashboardLayoutContent({ children, title, showVelocity }: DashboardLayoutProps) {
+  const { createTask, projects, setView } = useTasks();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskProject, setNewTaskProject] = useState("");
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger letter shortcuts when user is typing in inputs or textareas
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+
+      // ⌘K / Ctrl+K: Command Palette
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      if (isInput) return;
+
+      // 'c' or 'C': Create task
+      if (e.key.toLowerCase() === "c" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setAddTaskOpen(true);
+      }
+      // 'b' or 'B': Board view
+      else if (e.key.toLowerCase() === "b" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setView("board");
+      }
+      // 'l' or 'L': List view
+      else if (e.key.toLowerCase() === "l" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setView("list");
+      }
+      // '?': Shortcuts Cheat Sheet
+      else if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setView]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,20 +116,32 @@ function DashboardLayoutContent({ children, title }: DashboardLayoutProps) {
         />
         
         <main className="flex-1 overflow-auto p-6 bg-white dark:bg-zinc-950">
+          {showVelocity && <VelocityBar onOpenCommandPalette={() => setCommandPaletteOpen(true)} />}
           {children}
         </main>
       </div>
 
-      {/* Add Task Modal Dialog (Standard Backdrop Dismiss & Esc support) */}
+      {/* Command Palette Modal */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onOpenAddTask={() => setAddTaskOpen(true)}
+      />
+
+      {/* Shortcuts Cheat Sheet Modal */}
+      <ShortcutsModal
+        isOpen={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
+      />
+
+      {/* Add Task Modal Dialog */}
       {addTaskOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 backdrop-blur-xs p-4 animate-fade-in">
-          {/* Backdrop click to close */}
           <div 
             onClick={() => setAddTaskOpen(false)} 
             className="absolute inset-0 cursor-default"
           />
 
-          {/* Modal Card */}
           <div className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-850 dark:bg-zinc-900 animate-scale-up">
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
               <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
@@ -93,7 +156,6 @@ function DashboardLayoutContent({ children, title }: DashboardLayoutProps) {
             </div>
 
             <form onSubmit={handleCreateTask} className="flex flex-col gap-4">
-              {/* Task Title */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                   Task Title
@@ -109,7 +171,6 @@ function DashboardLayoutContent({ children, title }: DashboardLayoutProps) {
                 />
               </div>
 
-              {/* Project association */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                   Project (Optional)
@@ -128,7 +189,6 @@ function DashboardLayoutContent({ children, title }: DashboardLayoutProps) {
                 </select>
               </div>
 
-              {/* Submit Buttons */}
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
                   type="button"

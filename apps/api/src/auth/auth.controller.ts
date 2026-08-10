@@ -61,12 +61,10 @@ export class AuthController {
   }
 
   private setCookie(res: any, token: string) {
-    const isLocalhost = Boolean(process.env.FRONTEND_URL?.includes('localhost') || !process.env.FRONTEND_URL);
-
     res.cookie('pyramid_session', token, {
       httpOnly: true,
-      sameSite: isLocalhost ? 'lax' : 'none',
-      secure: !isLocalhost,
+      sameSite: 'none',
+      secure: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });

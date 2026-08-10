@@ -11,11 +11,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getApiUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+    if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+      return "https://usepyramid.onrender.com";
+    }
+    return "http://localhost:3001";
+  };
+
   const handleGuestLogin = async () => {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/auth/guest`, {
         method: "POST",
         credentials: "include",
@@ -44,7 +52,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const apiUrl = getApiUrl();
     window.location.href = `${apiUrl}/auth/google`;
   };
 

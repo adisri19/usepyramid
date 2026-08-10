@@ -1,4 +1,9 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/$/, "");
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname !== "localhost"
+    ? "https://usepyramid.onrender.com"
+    : "http://localhost:3001")
+).replace(/\/$/, "");
 
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;

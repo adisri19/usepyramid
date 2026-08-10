@@ -313,28 +313,34 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
             </span>
 
             <div className="flex flex-col gap-4 mb-4">
-              {comments.map((comm) => (
-                <div key={comm.id} className="flex gap-3">
-                  <img
-                    src={comm.author.avatarUrl || "https://api.dicebear.com/7.x/initials/svg?seed=Author"}
-                    alt="Comment Author"
-                    className="h-7 w-7 rounded-full object-cover border border-zinc-100 dark:border-zinc-800"
-                  />
-                  <div className="flex flex-col flex-1 bg-zinc-50 p-3 rounded-2xl dark:bg-zinc-900/35 border border-zinc-200/50 dark:border-zinc-850">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-zinc-850 dark:text-zinc-200">
-                        {comm.author.fullName}
-                      </span>
-                      <span className="text-[10px] text-zinc-400">
-                        {new Date(comm.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      </span>
+              {comments.map((comm, idx) => {
+                const commentId = comm.id || (comm as any)._id || `comment-${idx}`;
+                const authorName = comm.author?.fullName || comm.author?.username || "Team Member";
+                const avatar = comm.author?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${authorName}`;
+
+                return (
+                  <div key={commentId} className="flex gap-3">
+                    <img
+                      src={avatar}
+                      alt="Comment Author"
+                      className="h-7 w-7 rounded-full object-cover border border-zinc-100 dark:border-zinc-800"
+                    />
+                    <div className="flex flex-col flex-1 bg-zinc-50 p-3 rounded-2xl dark:bg-zinc-900/35 border border-zinc-200/50 dark:border-zinc-850">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-zinc-850 dark:text-zinc-200">
+                          {authorName}
+                        </span>
+                        <span className="text-[10px] text-zinc-400">
+                          {comm.createdAt ? new Date(comm.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Just now"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                        {comm.body}
+                      </p>
                     </div>
-                    <p className="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                      {comm.body}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <form onSubmit={handleAddComment} className="flex gap-3">

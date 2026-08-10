@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
+import { setAuthToken } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,10 +28,11 @@ export default function LoginPage() {
         throw new Error("Failed to authenticate as guest");
       }
 
-      // Check if cookie is set. If fetch responds with user, redirect
       const data = await response.json();
+      if (data.token) {
+        setAuthToken(data.token);
+      }
       if (data.user) {
-        // Redirection
         router.push("/tasks");
       }
     } catch (err: any) {

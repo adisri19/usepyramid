@@ -16,7 +16,7 @@ export class AuthController {
   async guestLogin(@Res({ passthrough: true }) res: any) {
     const { user, token } = await this.authService.createGuestSession();
     this.setCookie(res, token);
-    return { user };
+    return { user, token };
   }
 
   @Post('firebase')
@@ -31,7 +31,7 @@ export class AuthController {
     const decoded = await this.firebaseAdminService.verifyToken(idToken);
     const { user, token } = await this.authService.validateFirebaseUser(decoded);
     this.setCookie(res, token);
-    return { user };
+    return { user, token };
   }
 
   @Get('google')
@@ -43,34 +43,30 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req: any, @Res() res: any) {
-    const { token } = req.user; // req.user contains the output from GoogleStrategy.validate()
+    const { token } = req.user;
     this.setCookie(res, token);
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/tasks`);
+    const frontendUrl = (this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000').replace(/\/$/, '');
+    res.redirect(`${frontendUrl}/tasks?token=${token}`);
   }
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: any) {
-    const isProd = process.env.NODE_ENV === 'production';
-    const isCrossDomain = isProd && Boolean(process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
-
     res.clearCookie('pyramid_session', {
       httpOnly: true,
-      sameSite: isCrossDomain ? 'none' : 'lax',
-      secure: isCrossDomain || isProd,
+      sameSite: 'none',
+      secure: true,
       path: '/',
     });
     return { ok: true };
   }
 
   private setCookie(res: any, token: string) {
-    const isProd = process.env.NODE_ENV === 'production';
-    const isCrossDomain = isProd && Boolean(process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
+    const isLocalhost = Boolean(process.env.FRONTEND_URL?.includes('localhost') || !process.env.FRONTEND_URL);
 
     res.cookie('pyramid_session', token, {
       httpOnly: true,
-      sameSite: isCrossDomain ? 'none' : 'lax',
-      secure: isCrossDomain || isProd,
+      sameSite: isLocalhost ? 'lax' : 'none',
+      secure: !isLocalhost,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });

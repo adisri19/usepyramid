@@ -1,12 +1,43 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/$/, "");
+
+export function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  
+  // Check URL query param if returning from OAuth redirect
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get("token");
+  if (urlToken) {
+    localStorage.setItem("pyramid_token", urlToken);
+    // Clean token query parameter from URL cleanly without page reload
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
+    return urlToken;
+  }
+
+  return localStorage.getItem("pyramid_token");
+}
+
+export function setAuthToken(token: string) {
+  if (typeof window !== "undefined" && token) {
+    localStorage.setItem("pyramid_token", token);
+  }
+}
+
+export function clearAuthToken() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("pyramid_token");
+  }
+}
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
-  
-  const headers = {
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
-  } as HeadersInit;
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string>),
+  };
 
   const response = await fetch(url, {
     credentials: "include", // Forward cookies
@@ -16,7 +47,8 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     if (response.status === 401) {
-      if (typeof window !== "undefined") {
+      clearAuthToken();
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }

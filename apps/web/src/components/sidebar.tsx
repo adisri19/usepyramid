@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "./theme-provider";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, clearAuthToken } from "@/lib/api";
 import { 
   LayoutGrid, 
   Database, 
@@ -55,9 +55,11 @@ export function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, onCloseMo
   const handleLogout = async () => {
     try {
       await apiFetch("/auth/logout", { method: "POST" });
-      router.push("/login");
     } catch (err) {
       console.error("Logout failed", err);
+    } finally {
+      clearAuthToken();
+      router.push("/login");
     }
   };
 

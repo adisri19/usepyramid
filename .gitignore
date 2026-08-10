@@ -3,8 +3,12 @@ node_modules
 .pnp
 .pnp.js
 
-# Environment Variables
+# Environment Variables & Secrets
 .env
+.env*
+*.env
+**/.env
+**/.env*
 .env*.local
 .env.local
 .env.development.local

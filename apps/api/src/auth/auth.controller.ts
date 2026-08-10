@@ -51,20 +51,26 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: any) {
+    const isProd = process.env.NODE_ENV === 'production';
+    const isCrossDomain = isProd && Boolean(process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
+
     res.clearCookie('pyramid_session', {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: isCrossDomain ? 'none' : 'lax',
+      secure: isCrossDomain || isProd,
       path: '/',
     });
     return { ok: true };
   }
 
   private setCookie(res: any, token: string) {
+    const isProd = process.env.NODE_ENV === 'production';
+    const isCrossDomain = isProd && Boolean(process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
+
     res.cookie('pyramid_session', token, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: isCrossDomain ? 'none' : 'lax',
+      secure: isCrossDomain || isProd,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });

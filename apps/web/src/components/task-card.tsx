@@ -4,7 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useRouter } from "next/navigation";
 import { Task, User } from "@pyramid/shared-types";
-import { Calendar, MoreHorizontal, AlertCircle } from "lucide-react";
+import { Calendar, MoreHorizontal } from "lucide-react";
 
 interface TaskCardProps {
   task: Task;
@@ -16,21 +16,18 @@ interface TaskCardProps {
     status: boolean;
     reporter: boolean;
   };
+  isOverlay?: boolean;
 }
 
-export function TaskCard({ task, visibleFields }: TaskCardProps) {
+export function TaskCard({ task, visibleFields, isOverlay = false }: TaskCardProps) {
   const router = useRouter();
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
+    disabled: isOverlay,
   });
 
-  const style = {
-    transform: transform ? CSS.Transform.toString(transform) : undefined,
-    opacity: isDragging ? 0.4 : 1,
-  };
-
   const handleCardClick = (e: React.MouseEvent) => {
-    // Avoid opening panel if user clicked action menu or was dragging
+    if (isOverlay) return;
     if ((e.target as HTMLElement).closest("button")) {
       return;
     }
@@ -91,7 +88,6 @@ export function TaskCard({ task, visibleFields }: TaskCardProps) {
         </span>
       );
     }
-    // No Priority
     return (
       <span className="h-3 w-3 flex items-center justify-center text-zinc-400 dark:text-zinc-500" title="No Priority">
         <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -103,29 +99,37 @@ export function TaskCard({ task, visibleFields }: TaskCardProps) {
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
+      ref={isOverlay ? undefined : setNodeRef}
       onClick={handleCardClick}
-      className={`group relative rounded-xl border border-zinc-200/80 bg-white p-3.5 shadow-sm hover:shadow-md transition-all cursor-pointer dark:border-zinc-800/85 dark:bg-zinc-900/60`}
+      className={`group relative rounded-xl border bg-white p-3.5 shadow-sm transition-all dark:bg-zinc-900 ${
+        isOverlay
+          ? "cursor-grabbing shadow-2xl ring-2 ring-accent/40 rotate-[1.5deg] scale-[1.03] border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900"
+          : isDragging
+          ? "opacity-25 border-dashed border-zinc-400 dark:border-zinc-600 scale-[0.98]"
+          : "cursor-pointer hover:shadow-md border-zinc-200/80 dark:border-zinc-800/85"
+      }`}
     >
-      {/* Draggable handle is the entire card, listener boundaries are attached */}
-      <div {...attributes} {...listeners} className="absolute inset-0 z-0 rounded-xl" />
+      {/* Draggable handle covering the card */}
+      {!isOverlay && (
+        <div {...attributes} {...listeners} className="absolute inset-0 z-0 rounded-xl" />
+      )}
 
-      {/* Card Contents (Relative positioned to stay clickable over the drag listener overlay) */}
+      {/* Card Contents */}
       <div className="relative z-10 pointer-events-none">
         <div className="flex items-start justify-between gap-2">
           <p className="text-[13px] font-semibold tracking-tight text-zinc-850 dark:text-zinc-150 line-clamp-2 leading-snug">
             {task.title}
           </p>
-          <button className="pointer-events-auto text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200">
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          {!isOverlay && (
+            <button className="pointer-events-auto text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200">
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Due Date & Assignee row */}
         {(visibleFields.dueDate || visibleFields.members) && (
           <div className="mt-3 flex items-center justify-between">
-            {/* Assignee Avatar */}
             {visibleFields.members && assignee ? (
               <div className="flex items-center gap-1.5">
                 <img
@@ -142,7 +146,6 @@ export function TaskCard({ task, visibleFields }: TaskCardProps) {
               <div />
             )}
 
-            {/* Due Date Badge */}
             {visibleFields.dueDate && task.dueDate && (
               <div
                 className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
@@ -161,7 +164,6 @@ export function TaskCard({ task, visibleFields }: TaskCardProps) {
         {/* Bottom row: Labels & Priority */}
         {(visibleFields.labels || visibleFields.priority) && (
           <div className="mt-2.5 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/60 pt-2">
-            {/* Labels */}
             {visibleFields.labels && task.labels && task.labels.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {task.labels.map((label) => (
@@ -177,7 +179,6 @@ export function TaskCard({ task, visibleFields }: TaskCardProps) {
               <div />
             )}
 
-            {/* Priority Indicator */}
             {visibleFields.priority && renderPriorityIcon()}
           </div>
         )}

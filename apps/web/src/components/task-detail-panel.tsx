@@ -161,32 +161,67 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
     setGeneratingAi(true);
 
     try {
-      // Dynamic intelligent task decomposition based on task title and context
       const prompt = task.title.toLowerCase();
-      let suggestions = [
-        "Research requirements and gather technical specifications",
-        "Implement core component logic and edge case handling",
-        "Conduct integration testing and accessibility review",
-        "Prepare documentation and reviewer walkthrough",
+      const existingTitles = new Set(subtasks.map(s => s.title.toLowerCase().trim()));
+
+      const designPool = [
+        "Audit Figma components and design tokens",
+        "Build responsive viewports & dark mode variants",
+        "Implement subtle hover & transition micro-interactions",
+        "Review contrast ratios & keyboard tab stops",
+        "Export and optimize vector SVG assets",
+        "Conduct usability testing with interactive prototype",
+        "Document typography scale and spacing tokens",
+        "Create responsive mobile layout breakpoints",
+        "Refine interactive focus rings for accessibility",
+        "Benchmark cross-browser rendering in Chrome and Safari",
       ];
 
-      if (prompt.includes("api") || prompt.includes("backend") || prompt.includes("auth")) {
-        suggestions = [
-          "Define schema contracts & shared DTOs",
-          "Implement service controllers & auth middleware",
-          "Test validation pipelines & error responses",
-          "Verify rate limiting & security headers",
-        ];
-      } else if (prompt.includes("design") || prompt.includes("ui") || prompt.includes("layout")) {
-        suggestions = [
-          "Audit Figma components and design tokens",
-          "Build responsive viewports & dark mode variants",
-          "Implement subtle hover & transition micro-interactions",
-          "Review contrast ratios & keyboard tab stops",
+      const backendPool = [
+        "Define schema contracts & shared TypeScript DTOs",
+        "Implement service controllers & auth middleware",
+        "Test validation pipelines & error responses",
+        "Verify rate limiting & security headers",
+        "Optimize database queries and Mongoose indexes",
+        "Implement automated health-check endpoints",
+        "Configure CORS origin whitelist and cookie flags",
+        "Add unit test suites for edge case scenarios",
+        "Write Swagger / OpenAPI contract documentation",
+        "Setup structured error logging and metrics",
+      ];
+
+      const generalPool = [
+        "Research technical specifications and dependencies",
+        "Implement core component logic and edge case handling",
+        "Conduct integration testing and accessibility audit",
+        "Prepare documentation and reviewer walkthrough",
+        "Coordinate stakeholder sign-off and review",
+        "Benchmark performance and reduce bundle sizes",
+        "Create fallback error boundary states",
+        "Draft release notes and changelog summary",
+      ];
+
+      let candidatePool = generalPool;
+      if (prompt.includes("design") || prompt.includes("ui") || prompt.includes("hero") || prompt.includes("homepage") || prompt.includes("layout")) {
+        candidatePool = designPool;
+      } else if (prompt.includes("api") || prompt.includes("backend") || prompt.includes("auth") || prompt.includes("flow") || prompt.includes("security")) {
+        candidatePool = backendPool;
+      }
+
+      // Filter out any already existing subtasks to guarantee unique generation
+      const available = candidatePool.filter(item => !existingTitles.has(item.toLowerCase().trim()));
+
+      let toAdd = available.slice(0, 3);
+
+      if (toAdd.length === 0) {
+        const stepNum = subtasks.length + 1;
+        toAdd = [
+          `Phase ${Math.floor(subtasks.length / 3) + 1}: Final verification & QA check`,
+          `Phase ${Math.floor(subtasks.length / 3) + 1}: Performance audit & bundle analysis`,
         ];
       }
 
-      for (const item of suggestions) {
+      for (const item of toAdd) {
         const sub = await apiFetch("/tasks", {
           method: "POST",
           body: JSON.stringify({

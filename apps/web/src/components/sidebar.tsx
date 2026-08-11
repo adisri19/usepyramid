@@ -15,6 +15,7 @@ import {
   Moon, 
   Sparkles 
 } from "lucide-react";
+import { PyramidLogoBadge } from "./pyramid-logo";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -253,11 +254,7 @@ export function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, onCloseMo
       {/* Footer Info / Logo */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2.5 px-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 3L3 20h18L12 3z" />
-            </svg>
-          </div>
+          <PyramidLogoBadge className="h-6 w-6 rounded-lg" iconClassName="h-3.5 w-3.5" />
           {!isCollapsed && (
             <span className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
               Pyramid

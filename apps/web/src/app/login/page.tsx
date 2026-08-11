@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { setAuthToken } from "@/lib/api";
+import { PyramidLogoBadge } from "@/components/pyramid-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,20 +61,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
       {/* Top Logo and Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white dark:bg-white dark:text-black">
-          <svg
-            className="h-6 w-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 3L3 20h18L12 3z" />
-            <path d="M12 10l-3 5h6l-3-5z" fill="currentColor" />
-          </svg>
-        </div>
+        <PyramidLogoBadge className="h-11 w-11 rounded-2xl" iconClassName="h-6 w-6" />
         <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
           Pyramid
         </span>

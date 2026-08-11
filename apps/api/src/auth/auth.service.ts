@@ -57,21 +57,25 @@ export class AuthService {
       });
     }
 
+    const userId = (user as any)._id?.toString() || user.id;
+
     // Check if the user already has a workspace, otherwise create one
-    const workspaces = await this.workspacesService.findByOwner(user.id);
+    const workspaces = await this.workspacesService.findByOwner(userId);
     let workspace = workspaces[0];
 
     if (!workspace) {
       workspace = await this.workspacesService.create(
         `${user.fullName || 'My'}'s Workspace`,
-        user.id,
+        userId,
       );
     }
 
+    const workspaceId = (workspace as any)._id?.toString() || workspace.id;
+
     const payload: JwtPayload = {
-      sub: user.id,
+      sub: userId,
       email: user.email,
-      workspaceId: workspace.id,
+      workspaceId: workspaceId,
       isGuest: false,
     };
 
@@ -109,20 +113,23 @@ export class AuthService {
       });
     }
 
-    const workspaces = await this.workspacesService.findByOwner(user.id);
+    const userId = (user as any)._id?.toString() || user.id;
+    const workspaces = await this.workspacesService.findByOwner(userId);
     let workspace = workspaces[0];
 
     if (!workspace) {
       workspace = await this.workspacesService.create(
         `${user.fullName || 'My'}'s Workspace`,
-        user.id,
+        userId,
       );
     }
 
+    const workspaceId = (workspace as any)._id?.toString() || workspace.id;
+
     const payload: JwtPayload = {
-      sub: user.id,
+      sub: userId,
       email: user.email,
-      workspaceId: workspace.id,
+      workspaceId: workspaceId,
       isGuest: false,
     };
 

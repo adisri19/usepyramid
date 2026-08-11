@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase";
 import { setAuthToken } from "@/lib/api";
 import { PyramidLogoBadge } from "@/components/pyramid-logo";
+import { Loader2, Zap } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("Authenticating...");
   const [error, setError] = useState<string | null>(null);
 
   const getApiUrl = () => {
@@ -19,6 +19,33 @@ export default function LoginPage() {
     }
     return "http://localhost:3001";
   };
+
+  // Pre-warm backend container immediately in background
+  useEffect(() => {
+    try {
+      const apiUrl = getApiUrl();
+      fetch(`${apiUrl}/`, { method: "GET" }).catch(() => {});
+    } catch (_) {}
+  }, []);
+
+  // Update loading message if waking up from a free-tier cold start
+  useEffect(() => {
+    let timer1: NodeJS.Timeout;
+    let timer2: NodeJS.Timeout;
+    if (loading) {
+      setLoadingText("Authenticating...");
+      timer1 = setTimeout(() => {
+        setLoadingText("Waking up cloud server (~20s)...");
+      }, 2500);
+      timer2 = setTimeout(() => {
+        setLoadingText("Almost there, loading workspace...");
+      }, 12000);
+    }
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [loading]);
 
   const handleGuestLogin = async () => {
     setLoading(true);
@@ -46,7 +73,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "An unexpected error occurred.");
+      setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -89,16 +116,17 @@ export default function LoginPage() {
           <button
             onClick={handleGuestLogin}
             disabled={loading}
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-zinc-900 font-semibold text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 font-semibold text-white transition-colors hover:bg-zinc-800 disabled:opacity-80 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 cursor-pointer"
           >
-            {loading ? "Authenticating..." : "Continue as Guest"}
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            <span>{loading ? loadingText : "Continue as Guest"}</span>
           </button>
 
           {/* Login with Google Button */}
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white font-semibold text-zinc-800 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white font-semibold text-zinc-800 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -118,27 +146,26 @@ export default function LoginPage() {
                 fill="#EA4335"
               />
             </svg>
-            Login with Google
+            <span>Login with Google</span>
           </button>
         </div>
 
-        {/* Footer Terms */}
-        <p className="mt-8 text-center text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-500">
+        {/* Free-tier warm up note */}
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">
+          <Zap className="h-3 w-3 text-amber-500 shrink-0" />
+          <span>Initial login wakes the free cloud backend (~30s cold start)</span>
+        </div>
+
+        <div className="mt-6 text-center text-xs text-zinc-400">
           By clicking continue, you agree to our{" "}
-          <a
-            href="#"
-            className="underline transition-colors hover:text-zinc-600 dark:hover:text-zinc-300"
-          >
+          <span className="underline hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer">
             Terms of Service
-          </a>{" "}
+          </span>{" "}
           and{" "}
-          <a
-            href="#"
-            className="underline transition-colors hover:text-zinc-600 dark:hover:text-zinc-300"
-          >
+          <span className="underline hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer">
             Privacy Policy
-          </a>
-        </p>
+          </span>
+        </div>
       </div>
     </div>
   );

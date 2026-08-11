@@ -15,6 +15,7 @@ import { BoardColumn } from "./board-column";
 import { TaskCard } from "./task-card";
 import { useTasks } from "@/context/tasks-context";
 import { Task } from "@pyramid/shared-types";
+import { triggerConfetti } from "@/lib/confetti";
 
 const COLUMNS = ["To Do", "Doing", "Completed", "On Hold"] as const;
 
@@ -51,6 +52,9 @@ export function BoardView() {
     const task = tasks.find((t) => (t.id || (t as any)._id) === activeId);
     if (task && task.status !== overStatus) {
       await updateTaskStatus(activeId, overStatus);
+      if (overStatus === "Completed") {
+        triggerConfetti();
+      }
     }
   };
 

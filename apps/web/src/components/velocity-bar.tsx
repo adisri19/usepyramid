@@ -1,13 +1,14 @@
 "use client";
 
 import { useTasks } from "@/context/tasks-context";
-import { CheckCircle2, TrendingUp, Sparkles, Command } from "lucide-react";
+import { TrendingUp, Command, BarChart3 } from "lucide-react";
 
 interface VelocityBarProps {
   onOpenCommandPalette?: () => void;
+  onOpenAnalytics?: () => void;
 }
 
-export function VelocityBar({ onOpenCommandPalette }: VelocityBarProps) {
+export function VelocityBar({ onOpenCommandPalette, onOpenAnalytics }: VelocityBarProps) {
   const { tasks } = useTasks();
 
   const total = tasks.length;
@@ -18,14 +19,18 @@ export function VelocityBar({ onOpenCommandPalette }: VelocityBarProps) {
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 p-3.5 mb-6 dark:border-zinc-800 dark:bg-zinc-900/30">
-      <div className="flex items-center gap-4 flex-1 min-w-[240px]">
+      <div 
+        onClick={onOpenAnalytics}
+        className="flex items-center gap-4 flex-1 min-w-[240px] cursor-pointer group"
+        title="Click to view detailed Velocity & Analytics"
+      >
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent group-hover:scale-105 transition-transform">
             <TrendingUp className="h-4 w-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-zinc-900 dark:text-white">
+              <span className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-accent transition-colors">
                 Workspace Velocity
               </span>
               <span className="text-[11px] font-bold text-accent">
@@ -48,6 +53,16 @@ export function VelocityBar({ onOpenCommandPalette }: VelocityBarProps) {
       </div>
 
       <div className="flex items-center gap-2.5">
+        {onOpenAnalytics && (
+          <button
+            onClick={onOpenAnalytics}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200/80 bg-white px-2.5 py-1 text-[11px] font-semibold text-zinc-600 shadow-2xs hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-850 transition-colors"
+          >
+            <BarChart3 className="h-3 w-3 text-accent" />
+            <span>Insights</span>
+          </button>
+        )}
+
         {urgent > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-650 dark:bg-red-950/40 dark:text-red-400">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -61,7 +76,7 @@ export function VelocityBar({ onOpenCommandPalette }: VelocityBarProps) {
             className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-zinc-600 shadow-2xs hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-850 transition-colors"
           >
             <Command className="h-3 w-3" />
-            <span>Command Menu</span>
+            <span>Menu</span>
             <kbd className="rounded bg-zinc-100 px-1 py-0.2 text-[9px] font-bold text-zinc-500 dark:bg-zinc-800">⌘K</kbd>
           </button>
         )}

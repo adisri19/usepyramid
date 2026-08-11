@@ -8,19 +8,26 @@ import {
   Filter, 
   Plus, 
   Menu,
-  ChevronDown,
   Check,
-  X
+  X,
+  Compass
 } from "lucide-react";
 
 interface TopbarProps {
   onToggleSidebar: () => void;
   onOpenMobileSidebar: () => void;
   onOpenAddTaskModal: () => void;
+  onOpenTourModal?: () => void;
   title?: string;
 }
 
-export function Topbar({ onToggleSidebar, onOpenMobileSidebar, onOpenAddTaskModal, title = "Tasks" }: TopbarProps) {
+export function Topbar({ 
+  onToggleSidebar, 
+  onOpenMobileSidebar, 
+  onOpenAddTaskModal, 
+  onOpenTourModal,
+  title = "Tasks" 
+}: TopbarProps) {
   const { 
     view, 
     setView, 
@@ -71,7 +78,6 @@ export function Topbar({ onToggleSidebar, onOpenMobileSidebar, onOpenAddTaskModa
   const toggleFilter = (type: string, value: string) => {
     const activeFilters = filters as any;
     if (activeFilters[type] === value) {
-      // Remove filter if already active
       const updated = { ...filters } as any;
       delete updated[type];
       setFilters(updated);
@@ -124,7 +130,7 @@ export function Topbar({ onToggleSidebar, onOpenMobileSidebar, onOpenAddTaskModa
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tasks..."
+                placeholder="Search tasks (Press Esc to close)..."
                 className="w-full text-xs bg-transparent focus:outline-none text-zinc-850 dark:text-zinc-200"
               />
               <button 
@@ -154,6 +160,18 @@ export function Topbar({ onToggleSidebar, onOpenMobileSidebar, onOpenAddTaskModa
 
       {/* Action Controls */}
       <div className="flex items-center gap-2">
+        {/* Tour Highlights Button */}
+        {onOpenTourModal && (
+          <button
+            onClick={onOpenTourModal}
+            className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-2.5 text-xs font-bold text-accent shadow-2xs hover:bg-accent/20 transition-all"
+            title="Overview of Features & Tech Highlights"
+          >
+            <Compass className="h-3.5 w-3.5 animate-pulse" />
+            <span>Tour</span>
+          </button>
+        )}
+
         {/* Fields Dropdown */}
         <div className="relative" ref={fieldsRef}>
           <button

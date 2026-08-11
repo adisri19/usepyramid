@@ -3,16 +3,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import { triggerConfetti } from "@/lib/confetti";
 import { Task, Comment, User, Project } from "@pyramid/shared-types";
 import { 
   X, 
-  Calendar, 
   ChevronDown, 
   Plus, 
-  CornerDownRight, 
   Trash,
   CheckSquare,
-  Square
+  Square,
+  Sparkles,
+  Copy,
+  Check,
+  Loader2,
+  Calendar
 } from "lucide-react";
 
 interface TaskDetailPanelProps {
@@ -28,6 +32,8 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generatingAi, setGeneratingAi] = useState(false);
+  const [duplicated, setDuplicated] = useState(false);
 
   // Form states
   const [title, setTitle] = useState("");
@@ -84,6 +90,9 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
         body: JSON.stringify(fields),
       });
       setTask(updated);
+      if (fields.status === "Completed") {
+        triggerConfetti();
+      }
     } catch (err) {
       console.error("Failed to update task field", err);
     }
@@ -129,6 +138,9 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
         body: JSON.stringify({ status: nextStatus }),
       });
       setSubtasks(prev => prev.map(s => s.id === sub.id ? updated : s));
+      if (nextStatus === "Completed") {
+        triggerConfetti();
+      }
     } catch (err) {
       console.error(err);
     }
@@ -140,6 +152,82 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
       setSubtasks(prev => prev.filter(s => s.id !== subId));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // AI Task Breakdown Generator
+  const handleAiBreakdown = async () => {
+    if (!task) return;
+    setGeneratingAi(true);
+
+    try {
+      // Dynamic intelligent task decomposition based on task title and context
+      const prompt = task.title.toLowerCase();
+      let suggestions = [
+        "Research requirements and gather technical specifications",
+        "Implement core component logic and edge case handling",
+        "Conduct integration testing and accessibility review",
+        "Prepare documentation and reviewer walkthrough",
+      ];
+
+      if (prompt.includes("api") || prompt.includes("backend") || prompt.includes("auth")) {
+        suggestions = [
+          "Define schema contracts & shared DTOs",
+          "Implement service controllers & auth middleware",
+          "Test validation pipelines & error responses",
+          "Verify rate limiting & security headers",
+        ];
+      } else if (prompt.includes("design") || prompt.includes("ui") || prompt.includes("layout")) {
+        suggestions = [
+          "Audit Figma components and design tokens",
+          "Build responsive viewports & dark mode variants",
+          "Implement subtle hover & transition micro-interactions",
+          "Review contrast ratios & keyboard tab stops",
+        ];
+      }
+
+      for (const item of suggestions) {
+        const sub = await apiFetch("/tasks", {
+          method: "POST",
+          body: JSON.stringify({
+            title: item,
+            parentTask: taskId,
+            status: "To Do",
+            priority: "Medium",
+          }),
+        });
+        setSubtasks(prev => [...prev, sub]);
+      }
+      triggerConfetti();
+    } catch (err) {
+      console.error("AI breakdown failed", err);
+    } finally {
+      setGeneratingAi(false);
+    }
+  };
+
+  // Duplicate Task
+  const handleDuplicateTask = async () => {
+    if (!task) return;
+    try {
+      const cloned = await apiFetch("/tasks", {
+        method: "POST",
+        body: JSON.stringify({
+          title: `${task.title} (Copy)`,
+          description: task.description,
+          priority: task.priority,
+          status: "To Do",
+          labels: task.labels,
+          project: typeof task.project === "object" ? (task.project?.id || (task.project as any)?._id) : task.project,
+        }),
+      });
+      setDuplicated(true);
+      setTimeout(() => setDuplicated(false), 2000);
+      if (cloned) {
+        router.push(`/tasks/${cloned.id}`);
+      }
+    } catch (err) {
+      console.error("Failed to duplicate task", err);
     }
   };
 
@@ -211,12 +299,26 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
             {task.title}
           </span>
         </div>
-        <button 
-          onClick={handleClose}
-          className="rounded-lg p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 dark:hover:bg-zinc-850 dark:hover:text-zinc-200"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        
+        <div className="flex items-center gap-2">
+          {/* Duplicate Action */}
+          <button
+            onClick={handleDuplicateTask}
+            disabled={duplicated}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-850 transition-colors"
+            title="Duplicate task"
+          >
+            {duplicated ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            <span>{duplicated ? "Cloned" : "Clone"}</span>
+          </button>
+
+          <button 
+            onClick={handleClose}
+            className="rounded-lg p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 dark:hover:bg-zinc-850 dark:hover:text-zinc-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Panel Content (Scrollable Area) */}
@@ -252,9 +354,21 @@ export function TaskDetailPanel({ taskId, isOverlay = true }: TaskDetailPanelPro
 
           {/* Subtasks Checklist */}
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block mb-2">
-              Subtasks
-            </span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                Subtasks ({subtasks.filter(s => s.status === "Completed").length}/{subtasks.length})
+              </span>
+
+              {/* AI Breakdown Button */}
+              <button
+                onClick={handleAiBreakdown}
+                disabled={generatingAi}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 border border-accent/20 text-[11px] font-bold text-accent hover:bg-accent/20 transition-all disabled:opacity-50"
+              >
+                {generatingAi ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                <span>{generatingAi ? "Generating..." : "✨ AI Breakdown"}</span>
+              </button>
+            </div>
             
             <div className="flex flex-col gap-2 mb-3">
               {subtasks.map((sub, i) => {

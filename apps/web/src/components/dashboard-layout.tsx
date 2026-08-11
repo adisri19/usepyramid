@@ -7,6 +7,8 @@ import { Topbar } from "./topbar";
 import { VelocityBar } from "./velocity-bar";
 import { CommandPalette } from "./command-palette";
 import { ShortcutsModal } from "./shortcuts-modal";
+import { AnalyticsModal } from "./analytics-modal";
+import { TourModal } from "./tour-modal";
 import { X, Check } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -32,6 +34,8 @@ function DashboardLayoutContent({ children, title, showVelocity }: DashboardLayo
   const [addTaskOpen, setAddTaskOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskProject, setNewTaskProject] = useState("");
@@ -39,7 +43,6 @@ function DashboardLayoutContent({ children, title, showVelocity }: DashboardLayo
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger letter shortcuts when user is typing in inputs or textareas
       const target = e.target as HTMLElement;
       const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
 
@@ -113,13 +116,31 @@ function DashboardLayoutContent({ children, title, showVelocity }: DashboardLayo
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
           onOpenAddTaskModal={() => setAddTaskOpen(true)}
+          onOpenTourModal={() => setTourOpen(true)}
         />
         
         <main className="flex-1 overflow-auto p-6 bg-white dark:bg-zinc-950">
-          {showVelocity && <VelocityBar onOpenCommandPalette={() => setCommandPaletteOpen(true)} />}
+          {showVelocity && (
+            <VelocityBar 
+              onOpenCommandPalette={() => setCommandPaletteOpen(true)} 
+              onOpenAnalytics={() => setAnalyticsOpen(true)}
+            />
+          )}
           {children}
         </main>
       </div>
+
+      {/* Analytics & Velocity Insights Modal */}
+      <AnalyticsModal
+        isOpen={analyticsOpen}
+        onClose={() => setAnalyticsOpen(false)}
+      />
+
+      {/* Engineering Tour Modal */}
+      <TourModal
+        isOpen={tourOpen}
+        onClose={() => setTourOpen(false)}
+      />
 
       {/* Command Palette Modal */}
       <CommandPalette
